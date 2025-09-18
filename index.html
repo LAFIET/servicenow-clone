@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ITSM Automation UI</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f4; }
+    h1 { color: #333; }
+    .container { background: white; padding: 20px; border-radius: 8px; }
+    input, select, button { padding: 8px; margin: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 8px; border: 1px solid #ccc; }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ITSM Request Automation (Mock ServiceNow)</h1>
+    <h2>Create Ticket</h2>
+    <form id="ticketForm">
+      <label for="type">Type:</label>
+      <select id="type" required>
+        <option value="incident">Incident</option>
+        <option value="change">Change</option>
+        <option value="request">Request</option>
+      </select>
+      <br>
+      <label for="description">Description:</label>
+      <input type="text" id="description" placeholder="Describe the issue" required />
+      <button type="submit">Submit</button>
+    </form>
+
+    <h2>All Tickets</h2>
+    <button onclick="loadTickets()">Refresh Tickets</button>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Assigned To</th>
+          <th>Status</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody id="ticketsTableBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000';
+
+    document.getElementById('ticketForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const type = document.getElementById('type').value;
+      const description = document.getElementById('description').value;
+      await fetch(API_URL + '/ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, description })
+      });
+      document.getElementById('description').value = '';
+      loadTickets();
+    });
+
+    async function loadTickets() {
+      const res = await fetch(API_URL + '/tickets');
+      const tickets = await res.json();
+      const tbody = document.getElementById('ticketsTableBody');
+      tbody.innerHTML = '';
+      tickets.forEach(ticket => {
+        const row = `<tr>
+          <td>${ticket.id}</td>
+          <td>${ticket.type}</td>
+          <td>${ticket.description}</td>
+          <td>${ticket.assignedTo}</td>
+          <td>${ticket.status}</td>
+          <td>${new Date(ticket.createdAt).toLocaleString()}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    loadTickets();
+  </script>
+</body>
+</html>
